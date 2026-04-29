@@ -378,7 +378,7 @@ void MQTTBroker::onCompleteMessage(const espMqttClientTypes::MessageProperties& 
 
 void MQTTBroker::onMessage(const espMqttClientTypes::MessageProperties& properties, const char* topic, const uint8_t* payload, size_t length, size_t index, size_t total_length)
 {
-	static uint8_t mqttMessageBuffer[16384];
+	static uint8_t mqttMessageBuffer[30000];
 
 		// payload is bigger then max: return chunked
 	if (total_length >= sizeof(mqttMessageBuffer)) {

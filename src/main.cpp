@@ -35,7 +35,7 @@ const char *manifest[]{
     // Firmware name
     "Bambu Lighting",
     // Firmware version
-    "0.4.5",
+    "0.4.6",
     // Hardware chip/variant
 #if defined(CONFIG_IDF_TARGET_ESP32)
     "ESP32",
