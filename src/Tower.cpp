@@ -9,7 +9,7 @@
 
 namespace Tower {
 
-const char* PATTERN_NAMES[NUM_PATTERNS] = { "Constant", "Pulse", "Blink", "Fade" };
+const char* PATTERN_NAMES[NUM_PATTERNS] = { "Constant", "Pulse", "Blink", "Fade", "Rainbow" };
 
 // Stage ids from MQTTBroker::CURRENT_STAGE_IDS.
 static const std::set<int> STAGES_CHANGING = { 4, 22, 24 };   // changing, unloading, loading
@@ -17,6 +17,31 @@ static const std::set<int> STAGES_JAM      = { 32, 33, 35 };  // covered nozzle,
 static const std::set<int> STAGES_PAUSED   = { 5, 16, 30 };   // m400, user, user gcode
 static const int STAGE_RUNOUT   = 6;
 static const int STAGE_AMS_LOST = 26;
+
+BooleanConfigItem& getFinishedTakeover() {
+    static BooleanConfigItem fin_takeover("fin_takeover", false);
+    return fin_takeover;
+}
+
+uint8_t rainbowHue(byte rateCpm, unsigned long nowMs, unsigned long offsetMs,
+                   uint16_t pixel, uint16_t span) {
+    if (rateCpm == 0) {
+        rateCpm = 1;
+    }
+    const float periodMs = (60.0f * 1000.0f) / rateCpm;
+    const float phase    = fmodf((float)(nowMs - offsetMs), periodMs) / periodMs;
+
+    // Spread a full hue sweep across the segment so several LEDs show a
+    // gradient; a single LED just cycles.
+    float offset = 0.0f;
+    if (span > 1) {
+        offset = (float)pixel / (float)span;
+    }
+
+    float h = phase + offset;
+    h -= floorf(h);
+    return (uint8_t)(h * 255.0f);
+}
 
 ByteConfigItem& getDampLevel() {
     // Default 2: Bambu's guidance is that below 3 means the desiccant needs
@@ -127,6 +152,7 @@ void begin() {
     towerSet[n++] = &BambuLights::getNumLEDs();
     towerSet[n++] = &BambuLights::getIdleTimeout();
     towerSet[n++] = &getDampLevel();
+    towerSet[n++] = &getFinishedTakeover();
 
     for (int t = 0; t < NUM_TIERS; t++) {
         towerSet[n++] = &segments[t]->composite;
@@ -222,7 +248,8 @@ byte patternBrightness(byte pattern, byte value, byte rateCpm,
     if (value == 0) {
         return 0;
     }
-    if (pattern == PAT_CONSTANT) {
+    // Rainbow varies hue, not brightness, so it stays at full value here.
+    if (pattern == PAT_CONSTANT || pattern == PAT_RAINBOW) {
         return value;
     }
     if (rateCpm == 0) {
@@ -257,6 +284,35 @@ byte patternBrightness(byte pattern, byte value, byte rateCpm,
 }
 
 // --------------------------------------------------------------------- names
+
+int tierConditions(Tier t, Condition* out, int maxOut) {
+    static const Condition FIL[] = { COND_FIL_CHANGING, COND_FIL_RUNOUT,
+                                     COND_FIL_JAM, COND_FIL_AMS_LOST,
+                                     COND_FIL_DAMP };
+    static const Condition ST[]  = { COND_ST_IDLE, COND_ST_PRINTING,
+                                     COND_ST_PAUSED };
+    static const Condition FIN[] = { COND_FIN_READY };
+    static const Condition SYS[] = { COND_SYS_NO_WIFI, COND_SYS_NO_PRINTER,
+                                     COND_SYS_WARNING, COND_SYS_ERROR };
+
+    const Condition* src = 0;
+    int n = 0;
+    switch (t) {
+    case TIER_FILAMENT: src = FIL; n = 5; break;
+    case TIER_STATUS:   src = ST;  n = 3; break;
+    case TIER_FINISHED: src = FIN; n = 1; break;
+    case TIER_SYSTEM:   src = SYS; n = 4; break;
+    default: return 0;
+    }
+
+    if (n > maxOut) {
+        n = maxOut;
+    }
+    for (int i = 0; i < n; i++) {
+        out[i] = src[i];
+    }
+    return n;
+}
 
 uint32_t conditionColor(Condition c) {
     if (c <= COND_OFF || c >= NUM_CONDITIONS) {

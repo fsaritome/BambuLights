@@ -28,6 +28,13 @@ app.use(function(req, res, next) {
     next();
 });
 
+// Mirrors the firmware's /test?tier=N endpoint so the Test buttons do not
+// error out when developing against this mock.
+app.get("/test", function (req, res) {
+    console.log("TEST tier=" + req.query.tier);
+    res.send("testing");
+});
+
 app.use(expressStaticGzip("src"));
 
 // Serve files from current directory (web/)
@@ -221,6 +228,7 @@ state[5] = (function () {
 		'num_leds': 4,
 		'timeout': 5,
 		'damp_level': 2,
+		'fin_takeover': false,
 		'seg_status-first_led':   0, 'seg_status-count':   1,
 		'seg_finished-first_led': 1, 'seg_finished-count': 1,
 		'seg_system-first_led':   2, 'seg_system-count':   1,

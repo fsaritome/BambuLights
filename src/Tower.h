@@ -67,6 +67,7 @@ enum Pattern {
     PAT_PULSE,      // smooth exponential breath, as upstream
     PAT_BLINK,      // hard on/off square wave
     PAT_FADE,       // linear triangle ramp
+    PAT_RAINBOW,    // cycles hue over time and across the segment
     NUM_PATTERNS
 };
 
@@ -122,11 +123,24 @@ CompositeConfigItem& getConfig();
 // runs 5 (driest, grade A in the Bambu app) down to 1 (wettest, grade E), so
 // this is an upper bound on the worst unit. 0 disables the condition.
 ByteConfigItem& getDampLevel();
+
+// When the Finished tier lights up, paint the whole strip with it rather than
+// just its own segment, so a completed print takes over the tower.
+BooleanConfigItem& getFinishedTakeover();
+
+// Hue for the rainbow pattern: cycles with time, and spreads across a segment
+// so a multi-LED tier shows a gradient rather than one flat colour.
+uint8_t rainbowHue(byte rateCpm, unsigned long nowMs, unsigned long offsetMs,
+                   uint16_t pixel, uint16_t span);
 Look&    look(Condition c);
 Segment& segment(Tier t);
 
 // Most severe live condition for this tier, or COND_OFF.
 Condition evaluate(Tier t, const Facts& f);
+
+// Every condition belonging to a tier, for the Test buttons to cycle through.
+// Returns how many were written.
+int tierConditions(Tier t, Condition* out, int maxOut);
 
 // Brightness for a pattern at a point in time. `value` is the configured
 // peak, `rateCpm` cycles per minute, `offsetMs` when the condition started.

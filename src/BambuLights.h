@@ -63,6 +63,9 @@ private:
   unsigned long conditionStartMs[Tower::NUM_TIERS];
 
   void paintSegment(Tower::Tier tier, uint8_t hue, uint8_t sat, uint8_t val);
+  void paintRange(uint16_t first, uint16_t count, uint8_t hue, uint8_t sat, uint8_t val);
+  void paintRainbow(uint16_t first, uint16_t count, Tower::Look& lk,
+                    uint8_t val, unsigned long now, unsigned long since);
 
   CompositeConfigItem *currentConfig;
   ByteConfigItem *currentPattern;
