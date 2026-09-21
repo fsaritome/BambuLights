@@ -96,10 +96,12 @@ BaseConfigItem* mqttHAConfigSet[] = {
 
 CompositeConfigItem mqttHAConfig("mqtt_ha", 0, mqttHAConfigSet);
 
+// The old "leds" block is gone: the tower replaced its per-state colours, and
+// the strip-wide settings moved into Tower::getConfig().
 BaseConfigItem* rootConfigSet[] = {
   &mqttConfig,
   &mqttHAConfig,
-  &BambuLights::getAllConfig(),
+  &Tower::getConfig(),
   0
 };
 
@@ -212,6 +214,11 @@ void onHostnameChanged(ConfigItem<T> &item) {
 // single aligned enum write is atomic, and this is only a diagnostic readout.
 static BambuLights::State currentLightsState = BambuLights::noWiFi;
 
+// What each tower tier is currently showing, so the Info page can report it.
+static Tower::Condition currentTierConditions[Tower::NUM_TIERS] = {
+	Tower::COND_OFF, Tower::COND_OFF, Tower::COND_OFF, Tower::COND_OFF
+};
+
 void ledTaskFn(void *pArg) {
 	bambuLights->begin();
 	BambuLights::State prevLightsState = BambuLights::noWiFi;
@@ -299,9 +306,26 @@ void ledTaskFn(void *pArg) {
 		}
 
 		currentLightsState = lightsState;
-		bambuLights->setState(lightsState);
 
-		bambuLights->loop();
+		// Stacked tower: every tier is decided independently from the same
+		// snapshot of facts, so several can be lit at once.
+		Tower::Facts facts;
+		facts.wifiConnected    = WiFi.isConnected();
+		facts.printerConnected = mqttBroker.isConnected();
+		facts.printing         = (mqttBroker.getState() == MQTTBroker::printing);
+		facts.stage            = mqttBroker.getStage();
+		facts.hmsWarning       = mqttBroker.hasHmsWarning();
+		facts.hmsError         = mqttBroker.hasHmsError();
+		facts.printError       = mqttBroker.hasPrintError();
+		facts.finishedPending  = inFinishedPhase;
+		facts.filamentChanging = mqttBroker.isFilamentChanging();
+		facts.maxHumidity      = mqttBroker.getMaxHumidity();
+
+		for (int t = 0; t < Tower::NUM_TIERS; t++) {
+			currentTierConditions[t] = Tower::evaluate((Tower::Tier)t, facts);
+		}
+
+		bambuLights->renderTower(currentTierConditions);
 
 		delay(16);
 	}
@@ -334,7 +358,7 @@ void sendFavicon(AsyncWebServerRequest *request) {
 }
 
 String* items[] {
-	&WSMenuHandler::ledsMenu,
+	&WSMenuHandler::towerMenu,
 	&WSMenuHandler::mqttMenu,
 	&WSMenuHandler::mqttHAMenu,
 	&WSMenuHandler::infoMenu,
@@ -344,17 +368,20 @@ String* items[] {
 WSMenuHandler wsMenuHandler(items);
 WSConfigHandler wsMqttHandler(rootConfig, "mqtt");
 WSConfigHandler wsMqttHAHandler(rootConfig, "mqtt_ha");
-WSLEDConfigHandler wsLEDHandler(rootConfig, "leds");
+// The tower config nests segments and per-condition looks, so it needs the
+// flattening handler that emits "section-item" keys.
+WSLEDConfigHandler wsTowerHandler(rootConfig, "tower");
 WSInfoHandler wsInfoHandler(infoCallback);
 
 // Order of this needs to match the numbers in WSMenuHandler.cpp
+// Index must match the key in each WSMenuHandler entry.
 WSHandler* wsHandlers[] {
 	&wsMenuHandler,
-	&wsLEDHandler,
+	NULL,				// 1 was the LEDs page, now merged into Tower
 	&wsMqttHandler,
 	&wsMqttHAHandler,
 	&wsInfoHandler,
-	NULL,
+	&wsTowerHandler,	// 5
 	NULL,
 	NULL
 };
@@ -367,6 +394,22 @@ void infoCallback() {
 	wsInfoHandler.setLampState(BambuLights::stateName(currentLightsState));
 	wsInfoHandler.setPrinterState(mqttBroker.getStateName());
 	wsInfoHandler.setHmsMessage(mqttBroker.getHmsMessage());
+
+	// Each tier is reported as a swatch in its configured colour followed by
+	// the condition name, so the Info page mirrors what the tower is showing.
+	for (int t = 0; t < Tower::NUM_TIERS; t++) {
+		const Tower::Condition cond = currentTierConditions[t];
+		// The style string alone is ~163 chars, so leave real room for the
+		// condition name after it or snprintf silently truncates.
+		char swatch[256];
+		snprintf(swatch, sizeof(swatch),
+			"<span style=\"display:inline-block;width:14px;height:14px;"
+			"border-radius:3px;vertical-align:middle;margin-right:8px;"
+			"border:1px solid #666;background:#%06X\"></span>%s",
+			(unsigned int)Tower::conditionColor(cond),
+			Tower::conditionName(cond));
+		wsInfoHandler.setTierState(t, String(swatch));
+	}
 
 	wsInfoHandler.setFSSize(String(LittleFS.totalBytes()));
 	wsInfoHandler.setFSFree(String(LittleFS.totalBytes() - LittleFS.usedBytes()));
@@ -439,8 +482,12 @@ void handleWSMsg(AsyncWebSocketClient *client, char *data) {
 	String wholeMsg(data);
 	int code = wholeMsg.substring(0, wholeMsg.indexOf(':')).toInt();
 
-	if (code < 9) {
-		wsHandlers[code]->handle(client, data);
+	// Retired pages leave NULL holes in wsHandlers, and a stale cached page in
+	// someone's browser can still ask for one, so check before dereferencing.
+	if (code >= 0 && code < 9) {
+		if (wsHandlers[code] != NULL) {
+			wsHandlers[code]->handle(client, data);
+		}
 	} else {
 		String message = wholeMsg.substring(wholeMsg.indexOf(':')+1);
 		int screen = message.substring(0, message.indexOf(':')).toInt();

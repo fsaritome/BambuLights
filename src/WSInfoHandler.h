@@ -74,6 +74,13 @@ public:
 		this->hmsMessage = hmsMessage;
 	}
 
+	// What each tower tier is showing, indexed by Tower::Tier.
+	void setTierState(int tier, const String& name) {
+		if (tier >= 0 && tier < 4) {
+			tierState[tier] = name;
+		}
+	}
+
 private:
 	CbFunc cbFunc;
 
@@ -92,6 +99,7 @@ private:
 	String lampState;
 	String printerState;
 	String hmsMessage;
+	String tierState[4];
 };
 
 

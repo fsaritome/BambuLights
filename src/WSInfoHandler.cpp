@@ -36,6 +36,10 @@ void WSInfoHandler::handle(AsyncWebSocketClient *client, char *data) {
 	root["type"] = "sv.init.info";
 
 	JsonVariant value = root.createNestedObject("value");
+	value["tier_filament"] = tierState[0];
+	value["tier_status"]   = tierState[1];
+	value["tier_finished"] = tierState[2];
+	value["tier_system"]   = tierState[3];
 	value["lamp_state"] = lampState;
 	value["printer_state"] = printerState;
 	value["hms_message"] = hmsMessage.length() > 0 ? hmsMessage : String("None");

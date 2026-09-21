@@ -263,6 +263,9 @@ MQTTBroker::MQTTBroker() : client(espMqttClientTypes::UseInternalTask::YES) {
     filter["print"]["print_error"] = true;
 	filter["print"]["home_flag"] = true;
 	filter["print"]["lights_report"] = true;
+	// For the tower's filament tier: tray_now/tray_tar reveal an AMS change
+	// in progress, and each unit reports a humidity level.
+	filter["print"]["ams"] = true;
 }
 
 void MQTTBroker::setStateChangedCallback(std::function<void(MQTTBroker*)> callback) {
@@ -320,7 +323,7 @@ void MQTTBroker::handleMQTTMessage(JsonDocument &jsonMsg) {
         }
 
         if (printValues.containsKey("stg_cur")) {
-            int stage = printValues["stg_cur"];
+            stage = printValues["stg_cur"];
             State oldState = state;
             if (ERROR_STAGES.count(stage) > 0) {
                 state = error;
@@ -382,11 +385,16 @@ void MQTTBroker::handleMQTTMessage(JsonDocument &jsonMsg) {
                 }
             }
 
+            hmsWarning = false;
+            hmsError = false;
+
             if (lidarActive) {
                 state = no_lights;
                 hmsMessage = "";
             } else if (worstLevel > 0) {
                 state = (worstLevel >= 3) ? warning : error;
+                hmsWarning = (worstLevel >= 3);
+                hmsError = !hmsWarning;
                 hmsMessage = worstMessage;
                 Serial.print("HMS: "); Serial.println(hmsMessage);
             } else {
@@ -400,14 +408,45 @@ void MQTTBroker::handleMQTTMessage(JsonDocument &jsonMsg) {
 
         if (printValues.containsKey("print_error")) {
             int printError = printValues["print_error"].as<int32_t>();
+            printErrorActive = false;
             if (printError > 0) {
                 State oldState = state;
                 state = error;
                 if (PRINT_WARNINGS.count(printError) > 0) {
                     state = warning;
+                    hmsWarning = true;
+                } else {
+                    printErrorActive = true;
                 }
-                stateChanged = stateChanged || (oldState != state);               
+                stateChanged = stateChanged || (oldState != state);
             }
+        }
+
+        // AMS: tray_now is the loaded slot, tray_tar the one being switched
+        // to, so they differ only while a change is under way. 254/255 mean
+        // the external spool or nothing, which is not a change.
+        JsonVariant ams = printValues["ams"];
+        if (ams) {
+            bool oldChanging = filamentChanging;
+            int oldHumidity = maxHumidity;
+
+            int trayNow = ams["tray_now"].as<int>();
+            int trayTar = ams["tray_tar"].as<int>();
+            filamentChanging = (trayTar != trayNow) && (trayTar < 254);
+
+            int worstHumidity = 0;
+            JsonArray units = ams["ams"].as<JsonArray>();
+            for (int i = 0; i < units.size(); i++) {
+                int h = units[i]["humidity"].as<int>();   // 1 dry .. 5 wet
+                if (h > worstHumidity) {
+                    worstHumidity = h;
+                }
+            }
+            maxHumidity = worstHumidity;
+
+            stateChanged = stateChanged
+                        || (oldChanging != filamentChanging)
+                        || (oldHumidity != maxHumidity);
         }
     }
 
