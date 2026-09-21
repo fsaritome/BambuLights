@@ -65,7 +65,11 @@ public:
     bool hasHmsError() const        { return hmsError; }
     bool hasPrintError() const      { return printErrorActive; }
     bool isFilamentChanging() const { return filamentChanging; }
-    int  getMaxHumidity() const     { return maxHumidity; }  // 1 dry..5 wet, 0 unknown
+    // Worst (lowest) AMS humidity level across units. The scale runs 5 down
+    // to 1 and is the reverse of what it looks like: 5 is driest and shows as
+    // grade A in the Bambu app, 1 is wettest and shows as E. Bambu's guidance
+    // is that below 3 means the desiccant needs replacing. 0 = not reported.
+    int  getWorstHumidity() const   { return worstHumidity; }
 
 private:
     void onConnect(bool sessionPresent);
@@ -93,7 +97,7 @@ private:
     bool hmsError = false;
     bool printErrorActive = false;
     bool filamentChanging = false;
-    int  maxHumidity = 0;
+    int  worstHumidity = 0;
 
     uint32_t lastReconnect = 0;
 

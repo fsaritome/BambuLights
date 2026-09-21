@@ -220,6 +220,7 @@ state[5] = (function () {
 		'led_type': 0,
 		'num_leds': 4,
 		'timeout': 5,
+		'damp_level': 2,
 		'seg_status-first_led':   0, 'seg_status-count':   1,
 		'seg_finished-first_led': 1, 'seg_finished-count': 1,
 		'seg_system-first_led':   2, 'seg_system-count':   1,

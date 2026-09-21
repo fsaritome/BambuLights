@@ -83,7 +83,10 @@ struct Facts {
     bool printError       = false;
     bool finishedPending  = false;  // print done, not yet collected
     bool filamentChanging = false;  // ams tray_now != tray_tar
-    int  maxHumidity      = 0;      // 1 dry .. 5 wet, 0 = unknown
+    // Worst AMS humidity level. The scale is inverted from the obvious
+    // reading: 5 is driest (grade A in the Bambu app), 1 is wettest (grade E).
+    // 0 means not reported.
+    int  worstHumidity    = 0;
 };
 
 // One configurable appearance: colour, pattern and rate.
@@ -114,6 +117,11 @@ struct Segment {
 void begin();
 
 CompositeConfigItem& getConfig();
+
+// Humidity level at or below which the filament tier reports damp. The scale
+// runs 5 (driest, grade A in the Bambu app) down to 1 (wettest, grade E), so
+// this is an upper bound on the worst unit. 0 disables the condition.
+ByteConfigItem& getDampLevel();
 Look&    look(Condition c);
 Segment& segment(Tier t);
 

@@ -314,6 +314,20 @@
 						</div>
 					</fieldset>
 					<div class="clearFloats"><h3>Filament tier</h3></div>
+					<div class="clearFloats"></div>
+					<div class="dispInlineLabel">
+						<label for="damp_level">Warn when AMS reaches</label>
+					</div>
+					<div class="dispInline">
+						<select onchange="elementChange(this)" type="picklist" id="damp_level" data-mini="true">
+							<option value="0">Never</option>
+							<option value="4">B or worse</option>
+							<option value="3">C or worse</option>
+							<option value="2">D or worse</option>
+							<option value="1">E only</option>
+						</select>
+					</div>
+					<div class="clearFloats"></div>
 					<fieldset id="fil_changing-colors" data-collapsed="true" data-role="collapsible" data-iconpos="right" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">
 						<legend>Changing filament</legend>
 						<div class="dispInlineLabel">
