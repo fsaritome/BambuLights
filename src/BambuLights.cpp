@@ -430,12 +430,32 @@ void BambuLights::clear() {
 
 void BambuLights::paintSegment(Tower::Tier tier, uint8_t hue, uint8_t sat, uint8_t val) {
   Tower::Segment& seg = Tower::segment(tier);
+  paintRange(seg.first_led.value, seg.count.value, hue, sat, val);
+}
+
+void BambuLights::paintRange(uint16_t first, uint16_t count,
+                             uint8_t hue, uint8_t sat, uint8_t val) {
   const uint16_t total = pixels->PixelCount();
 
-  for (uint8_t i = 0; i < seg.count.value; i++) {
-    const uint16_t idx = (uint16_t)seg.first_led.value + i;
-    if (idx < total) {           // ignore segments configured past the strip
+  for (uint16_t i = 0; i < count; i++) {
+    const uint16_t idx = first + i;
+    if (idx < total) {           // ignore ranges configured past the strip
       setPixelColor(idx, hue, sat, val);
+    }
+  }
+}
+
+// Rainbow needs a different hue per pixel, so it cannot go through the flat
+// fill above.
+void BambuLights::paintRainbow(uint16_t first, uint16_t count, Tower::Look& lk,
+                               uint8_t val, unsigned long now, unsigned long since) {
+  const uint16_t total = pixels->PixelCount();
+
+  for (uint16_t i = 0; i < count; i++) {
+    const uint16_t idx = first + i;
+    if (idx < total) {
+      const uint8_t hue = Tower::rainbowHue(lk.rate.value, now, since, i, count);
+      setPixelColor(idx, hue, 255, val);
     }
   }
 }
@@ -461,6 +481,11 @@ void BambuLights::renderTower(const Tower::Condition* conditions) {
   // than leaving stale pixels lit where a segment was moved or shrunk.
   pixels->ClearTo(RgbColor(0));
 
+  // A finished print can take over the whole tower rather than lighting only
+  // its own tier, which is easier to notice from across the room.
+  const bool takeover = Tower::getFinishedTakeover()
+                     && conditions[Tower::TIER_FINISHED] != Tower::COND_OFF;
+
   for (int t = 0; t < Tower::NUM_TIERS; t++) {
     const Tower::Condition cond = conditions[t];
 
@@ -469,6 +494,9 @@ void BambuLights::renderTower(const Tower::Condition* conditions) {
       conditionStartMs[t] = now;   // restart this tier's pattern cleanly
     }
 
+    if (takeover && t != Tower::TIER_FINISHED) {
+      continue;                    // the finished tier owns the strip
+    }
     if (cond == Tower::COND_OFF) {
       continue;                    // a dark tier is meaningful, leave it dark
     }
@@ -478,7 +506,18 @@ void BambuLights::renderTower(const Tower::Condition* conditions) {
                                         lk.rate.value, now, conditionStartMs[t]);
     val = (byte)((uint16_t)val * brightness / 255);
 
-    paintSegment((Tower::Tier)t, (uint8_t)lk.hue.value, lk.saturation.value, val);
+    uint16_t first = Tower::segment((Tower::Tier)t).first_led.value;
+    uint16_t count = Tower::segment((Tower::Tier)t).count.value;
+    if (takeover) {
+      first = 0;
+      count = pixels->PixelCount();
+    }
+
+    if (lk.pattern.value == Tower::PAT_RAINBOW) {
+      paintRainbow(first, count, lk, val, now, conditionStartMs[t]);
+    } else {
+      paintRange(first, count, (uint8_t)lk.hue.value, lk.saturation.value, val);
+    }
   }
 
   show();

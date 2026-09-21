@@ -219,6 +219,24 @@ static Tower::Condition currentTierConditions[Tower::NUM_TIERS] = {
 	Tower::COND_OFF, Tower::COND_OFF, Tower::COND_OFF, Tower::COND_OFF
 };
 
+// Test mode: the Tower page can ask a tier to walk through each of its
+// conditions so you can see which LED it drives and what the colours look
+// like without waiting for the printer to produce them.
+static const unsigned long TEST_STEP_MS = 2000;
+static int           testTier   = -1;      // -1 = not testing
+static int           testIndex  = 0;
+static unsigned long testStepAt = 0;
+
+static void startTierTest(int tier) {
+	if (tier >= 0 && tier < Tower::NUM_TIERS) {
+		testTier   = tier;
+		testIndex  = 0;
+		testStepAt = millis();
+	} else {
+		testTier = -1;                     // anything else cancels
+	}
+}
+
 void ledTaskFn(void *pArg) {
 	bambuLights->begin();
 	BambuLights::State prevLightsState = BambuLights::noWiFi;
@@ -323,6 +341,24 @@ void ledTaskFn(void *pArg) {
 
 		for (int t = 0; t < Tower::NUM_TIERS; t++) {
 			currentTierConditions[t] = Tower::evaluate((Tower::Tier)t, facts);
+		}
+
+		// A test overrides just the tier under test, so the rest of the tower
+		// keeps telling the truth while you look at one segment.
+		if (testTier >= 0) {
+			Tower::Condition list[8];
+			int n = Tower::tierConditions((Tower::Tier)testTier, list, 8);
+
+			if (millis() - testStepAt >= TEST_STEP_MS) {
+				testStepAt = millis();
+				testIndex++;
+			}
+
+			if (n <= 0 || testIndex >= n) {
+				testTier = -1;             // finished, back to reality
+			} else {
+				currentTierConditions[testTier] = list[testIndex];
+			}
 		}
 
 		bambuLights->renderTower(currentTierConditions);
@@ -545,7 +581,18 @@ void mainHandler(AsyncWebServerRequest *request) {
 	request->send(LittleFS, "/index.html");
 }
 
+// GET /test?tier=N walks tier N through each of its conditions.
+void testHandler(AsyncWebServerRequest *request) {
+	int tier = -1;
+	if (request->hasParam("tier")) {
+		tier = request->getParam("tier")->value().toInt();
+	}
+	startTierTest(tier);
+	request->send(200, "text/plain", tier >= 0 ? "testing" : "cancelled");
+}
+
 void configureWebServer() {
+	server.on("/test", HTTP_GET, testHandler);
 	// no-cache, not no-store: the browser may keep a copy but must revalidate
 	// with us before using it. Without this, browsers serve a stale page after
 	// a filesystem update and it looks as though the update did not take.

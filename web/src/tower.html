@@ -103,17 +103,23 @@
 						<input onblur="elementBlur(this)" type="number" pattern="[0-9]*" id="seg_filament-count" data-mini="true" />
 					</div>
 					<div class="clearFloats"><h3>Status tier</h3></div>
+					<div class="clearFloats"></div>
+					<div class="dispInline">
+						<button type="button" data-mini="true" data-inline="true" onclick="fetch('/test?tier=1');return false;">Test this tier</button>
+					</div>
+					<div class="clearFloats"></div>
 					<fieldset id="st_idle-colors" data-collapsed="true" data-role="collapsible" data-iconpos="right" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">
 						<legend>Idle</legend>
 						<div class="dispInlineLabel">
 							<label for="st_idle-pattern">Pattern</label>
 						</div>
 						<div class="dispInline">
-							<select onchange="setVisibility('st_idle-rate_container', this, ['1','2','3']);elementChange(this)" type="picklist" id="st_idle-pattern" data-mini="true">
+							<select onchange="setVisibility('st_idle-rate_container', this, ['1','2','3','4']);elementChange(this)" type="picklist" id="st_idle-pattern" data-mini="true">
 								<option value="0">Constant</option>
 								<option value="1">Pulse</option>
 								<option value="2">Blink</option>
 								<option value="3">Fade</option>
+								<option value="4">Rainbow</option>
 							</select>
 						</div>
 						<div id="st_idle-rate_container" style="display: none;">
@@ -135,11 +141,12 @@
 							<label for="st_printing-pattern">Pattern</label>
 						</div>
 						<div class="dispInline">
-							<select onchange="setVisibility('st_printing-rate_container', this, ['1','2','3']);elementChange(this)" type="picklist" id="st_printing-pattern" data-mini="true">
+							<select onchange="setVisibility('st_printing-rate_container', this, ['1','2','3','4']);elementChange(this)" type="picklist" id="st_printing-pattern" data-mini="true">
 								<option value="0">Constant</option>
 								<option value="1">Pulse</option>
 								<option value="2">Blink</option>
 								<option value="3">Fade</option>
+								<option value="4">Rainbow</option>
 							</select>
 						</div>
 						<div id="st_printing-rate_container" style="display: none;">
@@ -161,11 +168,12 @@
 							<label for="st_paused-pattern">Pattern</label>
 						</div>
 						<div class="dispInline">
-							<select onchange="setVisibility('st_paused-rate_container', this, ['1','2','3']);elementChange(this)" type="picklist" id="st_paused-pattern" data-mini="true">
+							<select onchange="setVisibility('st_paused-rate_container', this, ['1','2','3','4']);elementChange(this)" type="picklist" id="st_paused-pattern" data-mini="true">
 								<option value="0">Constant</option>
 								<option value="1">Pulse</option>
 								<option value="2">Blink</option>
 								<option value="3">Fade</option>
+								<option value="4">Rainbow</option>
 							</select>
 						</div>
 						<div id="st_paused-rate_container" style="display: none;">
@@ -182,17 +190,30 @@
 						</div>
 					</fieldset>
 					<div class="clearFloats"><h3>Finished tier</h3></div>
+					<div class="clearFloats"></div>
+					<div class="dispInline">
+						<button type="button" data-mini="true" data-inline="true" onclick="fetch('/test?tier=2');return false;">Test this tier</button>
+					</div>
+					<div class="clearFloats"></div>
+					<div class="dispInlineLabel">
+						<label for="fin_takeover">Use all LEDs</label>
+					</div>
+					<div class="dispInline">
+						<input onchange="elementChange(this)" type="checkbox" data-role="flipswitch" name="fin_takeover" id="fin_takeover" data-on-text="On" data-off-text="Off" data-wrapper-class="custom-label-flipswitch">
+					</div>
+					<div class="clearFloats"></div>
 					<fieldset id="fin_ready-colors" data-collapsed="true" data-role="collapsible" data-iconpos="right" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">
 						<legend>Ready to collect</legend>
 						<div class="dispInlineLabel">
 							<label for="fin_ready-pattern">Pattern</label>
 						</div>
 						<div class="dispInline">
-							<select onchange="setVisibility('fin_ready-rate_container', this, ['1','2','3']);elementChange(this)" type="picklist" id="fin_ready-pattern" data-mini="true">
+							<select onchange="setVisibility('fin_ready-rate_container', this, ['1','2','3','4']);elementChange(this)" type="picklist" id="fin_ready-pattern" data-mini="true">
 								<option value="0">Constant</option>
 								<option value="1">Pulse</option>
 								<option value="2">Blink</option>
 								<option value="3">Fade</option>
+								<option value="4">Rainbow</option>
 							</select>
 						</div>
 						<div id="fin_ready-rate_container" style="display: none;">
@@ -209,17 +230,23 @@
 						</div>
 					</fieldset>
 					<div class="clearFloats"><h3>System tier</h3></div>
+					<div class="clearFloats"></div>
+					<div class="dispInline">
+						<button type="button" data-mini="true" data-inline="true" onclick="fetch('/test?tier=3');return false;">Test this tier</button>
+					</div>
+					<div class="clearFloats"></div>
 					<fieldset id="sys_no_wifi-colors" data-collapsed="true" data-role="collapsible" data-iconpos="right" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">
 						<legend>No WiFi</legend>
 						<div class="dispInlineLabel">
 							<label for="sys_no_wifi-pattern">Pattern</label>
 						</div>
 						<div class="dispInline">
-							<select onchange="setVisibility('sys_no_wifi-rate_container', this, ['1','2','3']);elementChange(this)" type="picklist" id="sys_no_wifi-pattern" data-mini="true">
+							<select onchange="setVisibility('sys_no_wifi-rate_container', this, ['1','2','3','4']);elementChange(this)" type="picklist" id="sys_no_wifi-pattern" data-mini="true">
 								<option value="0">Constant</option>
 								<option value="1">Pulse</option>
 								<option value="2">Blink</option>
 								<option value="3">Fade</option>
+								<option value="4">Rainbow</option>
 							</select>
 						</div>
 						<div id="sys_no_wifi-rate_container" style="display: none;">
@@ -241,11 +268,12 @@
 							<label for="sys_no_printer-pattern">Pattern</label>
 						</div>
 						<div class="dispInline">
-							<select onchange="setVisibility('sys_no_printer-rate_container', this, ['1','2','3']);elementChange(this)" type="picklist" id="sys_no_printer-pattern" data-mini="true">
+							<select onchange="setVisibility('sys_no_printer-rate_container', this, ['1','2','3','4']);elementChange(this)" type="picklist" id="sys_no_printer-pattern" data-mini="true">
 								<option value="0">Constant</option>
 								<option value="1">Pulse</option>
 								<option value="2">Blink</option>
 								<option value="3">Fade</option>
+								<option value="4">Rainbow</option>
 							</select>
 						</div>
 						<div id="sys_no_printer-rate_container" style="display: none;">
@@ -267,11 +295,12 @@
 							<label for="sys_warning-pattern">Pattern</label>
 						</div>
 						<div class="dispInline">
-							<select onchange="setVisibility('sys_warning-rate_container', this, ['1','2','3']);elementChange(this)" type="picklist" id="sys_warning-pattern" data-mini="true">
+							<select onchange="setVisibility('sys_warning-rate_container', this, ['1','2','3','4']);elementChange(this)" type="picklist" id="sys_warning-pattern" data-mini="true">
 								<option value="0">Constant</option>
 								<option value="1">Pulse</option>
 								<option value="2">Blink</option>
 								<option value="3">Fade</option>
+								<option value="4">Rainbow</option>
 							</select>
 						</div>
 						<div id="sys_warning-rate_container" style="display: none;">
@@ -293,11 +322,12 @@
 							<label for="sys_error-pattern">Pattern</label>
 						</div>
 						<div class="dispInline">
-							<select onchange="setVisibility('sys_error-rate_container', this, ['1','2','3']);elementChange(this)" type="picklist" id="sys_error-pattern" data-mini="true">
+							<select onchange="setVisibility('sys_error-rate_container', this, ['1','2','3','4']);elementChange(this)" type="picklist" id="sys_error-pattern" data-mini="true">
 								<option value="0">Constant</option>
 								<option value="1">Pulse</option>
 								<option value="2">Blink</option>
 								<option value="3">Fade</option>
+								<option value="4">Rainbow</option>
 							</select>
 						</div>
 						<div id="sys_error-rate_container" style="display: none;">
@@ -314,6 +344,11 @@
 						</div>
 					</fieldset>
 					<div class="clearFloats"><h3>Filament tier</h3></div>
+					<div class="clearFloats"></div>
+					<div class="dispInline">
+						<button type="button" data-mini="true" data-inline="true" onclick="fetch('/test?tier=0');return false;">Test this tier</button>
+					</div>
+					<div class="clearFloats"></div>
 					<div class="clearFloats"></div>
 					<div class="dispInlineLabel">
 						<label for="damp_level">Warn when AMS reaches</label>
@@ -334,11 +369,12 @@
 							<label for="fil_changing-pattern">Pattern</label>
 						</div>
 						<div class="dispInline">
-							<select onchange="setVisibility('fil_changing-rate_container', this, ['1','2','3']);elementChange(this)" type="picklist" id="fil_changing-pattern" data-mini="true">
+							<select onchange="setVisibility('fil_changing-rate_container', this, ['1','2','3','4']);elementChange(this)" type="picklist" id="fil_changing-pattern" data-mini="true">
 								<option value="0">Constant</option>
 								<option value="1">Pulse</option>
 								<option value="2">Blink</option>
 								<option value="3">Fade</option>
+								<option value="4">Rainbow</option>
 							</select>
 						</div>
 						<div id="fil_changing-rate_container" style="display: none;">
@@ -360,11 +396,12 @@
 							<label for="fil_runout-pattern">Pattern</label>
 						</div>
 						<div class="dispInline">
-							<select onchange="setVisibility('fil_runout-rate_container', this, ['1','2','3']);elementChange(this)" type="picklist" id="fil_runout-pattern" data-mini="true">
+							<select onchange="setVisibility('fil_runout-rate_container', this, ['1','2','3','4']);elementChange(this)" type="picklist" id="fil_runout-pattern" data-mini="true">
 								<option value="0">Constant</option>
 								<option value="1">Pulse</option>
 								<option value="2">Blink</option>
 								<option value="3">Fade</option>
+								<option value="4">Rainbow</option>
 							</select>
 						</div>
 						<div id="fil_runout-rate_container" style="display: none;">
@@ -386,11 +423,12 @@
 							<label for="fil_jam-pattern">Pattern</label>
 						</div>
 						<div class="dispInline">
-							<select onchange="setVisibility('fil_jam-rate_container', this, ['1','2','3']);elementChange(this)" type="picklist" id="fil_jam-pattern" data-mini="true">
+							<select onchange="setVisibility('fil_jam-rate_container', this, ['1','2','3','4']);elementChange(this)" type="picklist" id="fil_jam-pattern" data-mini="true">
 								<option value="0">Constant</option>
 								<option value="1">Pulse</option>
 								<option value="2">Blink</option>
 								<option value="3">Fade</option>
+								<option value="4">Rainbow</option>
 							</select>
 						</div>
 						<div id="fil_jam-rate_container" style="display: none;">
@@ -412,11 +450,12 @@
 							<label for="fil_ams_lost-pattern">Pattern</label>
 						</div>
 						<div class="dispInline">
-							<select onchange="setVisibility('fil_ams_lost-rate_container', this, ['1','2','3']);elementChange(this)" type="picklist" id="fil_ams_lost-pattern" data-mini="true">
+							<select onchange="setVisibility('fil_ams_lost-rate_container', this, ['1','2','3','4']);elementChange(this)" type="picklist" id="fil_ams_lost-pattern" data-mini="true">
 								<option value="0">Constant</option>
 								<option value="1">Pulse</option>
 								<option value="2">Blink</option>
 								<option value="3">Fade</option>
+								<option value="4">Rainbow</option>
 							</select>
 						</div>
 						<div id="fil_ams_lost-rate_container" style="display: none;">
@@ -438,11 +477,12 @@
 							<label for="fil_damp-pattern">Pattern</label>
 						</div>
 						<div class="dispInline">
-							<select onchange="setVisibility('fil_damp-rate_container', this, ['1','2','3']);elementChange(this)" type="picklist" id="fil_damp-pattern" data-mini="true">
+							<select onchange="setVisibility('fil_damp-rate_container', this, ['1','2','3','4']);elementChange(this)" type="picklist" id="fil_damp-pattern" data-mini="true">
 								<option value="0">Constant</option>
 								<option value="1">Pulse</option>
 								<option value="2">Blink</option>
 								<option value="3">Fade</option>
+								<option value="4">Rainbow</option>
 							</select>
 						</div>
 						<div id="fil_damp-rate_container" style="display: none;">
