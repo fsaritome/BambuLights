@@ -432,25 +432,28 @@ void MQTTBroker::handleMQTTMessage(JsonDocument &jsonMsg) {
         JsonVariant ams = printValues["ams"];
         if (ams) {
             bool oldChanging = filamentChanging;
-            int oldHumidity = maxHumidity;
+            int oldHumidity = worstHumidity;
 
             int trayNow = ams["tray_now"].as<int>();
             int trayTar = ams["tray_tar"].as<int>();
             filamentChanging = (trayTar != trayNow) && (trayTar < 254);
 
-            int worstHumidity = 0;
+            // The scale is inverted from the obvious reading: 5 is driest
+            // (grade A in the app) and 1 is wettest (grade E). So the worst
+            // unit is the one with the LOWEST value. 0 means not reported.
+            int worst = 0;
             JsonArray units = ams["ams"].as<JsonArray>();
             for (int i = 0; i < units.size(); i++) {
-                int h = units[i]["humidity"].as<int>();   // 1 dry .. 5 wet
-                if (h > worstHumidity) {
-                    worstHumidity = h;
+                int h = units[i]["humidity"].as<int>();
+                if (h > 0 && (worst == 0 || h < worst)) {
+                    worst = h;
                 }
             }
-            maxHumidity = worstHumidity;
+            worstHumidity = worst;
 
             stateChanged = stateChanged
                         || (oldChanging != filamentChanging)
-                        || (oldHumidity != maxHumidity);
+                        || (oldHumidity != worstHumidity);
         }
     }
 

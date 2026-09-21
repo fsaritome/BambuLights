@@ -18,8 +18,12 @@ static const std::set<int> STAGES_PAUSED   = { 5, 16, 30 };   // m400, user, use
 static const int STAGE_RUNOUT   = 6;
 static const int STAGE_AMS_LOST = 26;
 
-// Humidity is reported 1 (dry) to 5 (wet); warn from 4.
-static const int HUMIDITY_DAMP = 4;
+ByteConfigItem& getDampLevel() {
+    // Default 2: Bambu's guidance is that below 3 means the desiccant needs
+    // replacing, and the scale is inverted, so 2 and under is "getting wet".
+    static ByteConfigItem damp_level("damp_level", 2);
+    return damp_level;
+}
 
 Look::Look(const char* name, byte pat, int h, byte sat, byte val, byte rateCpm)
   : colors("colors", true),
@@ -122,6 +126,7 @@ void begin() {
     towerSet[n++] = &BambuLights::getLedType();
     towerSet[n++] = &BambuLights::getNumLEDs();
     towerSet[n++] = &BambuLights::getIdleTimeout();
+    towerSet[n++] = &getDampLevel();
 
     for (int t = 0; t < NUM_TIERS; t++) {
         towerSet[n++] = &segments[t]->composite;
@@ -177,7 +182,9 @@ Condition evaluate(Tier t, const Facts& f) {
         if (f.stage == STAGE_AMS_LOST)          return COND_FIL_AMS_LOST;
         if (STAGES_CHANGING.count(f.stage) > 0
             || f.filamentChanging)              return COND_FIL_CHANGING;
-        if (f.maxHumidity >= HUMIDITY_DAMP)     return COND_FIL_DAMP;
+        // 0 disables the check; 0 from the printer means "not reported".
+        if (getDampLevel().value > 0 && f.worstHumidity > 0
+            && f.worstHumidity <= getDampLevel().value) return COND_FIL_DAMP;
         return COND_OFF;
 
     case TIER_STATUS:

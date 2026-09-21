@@ -319,7 +319,7 @@ void ledTaskFn(void *pArg) {
 		facts.printError       = mqttBroker.hasPrintError();
 		facts.finishedPending  = inFinishedPhase;
 		facts.filamentChanging = mqttBroker.isFilamentChanging();
-		facts.maxHumidity      = mqttBroker.getMaxHumidity();
+		facts.worstHumidity    = mqttBroker.getWorstHumidity();
 
 		for (int t = 0; t < Tower::NUM_TIERS; t++) {
 			currentTierConditions[t] = Tower::evaluate((Tower::Tier)t, facts);
