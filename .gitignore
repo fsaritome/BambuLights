@@ -10,3 +10,10 @@ scratch
 web/node_modules
 web/package-lock.json
 data/*.gz
+# Local printer credentials - never commit these
+include/local_secrets.h
+bambu_token.json
+
+# Scratch scripts from development
+bambu_*.py
+tower.yaml

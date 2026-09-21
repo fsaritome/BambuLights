@@ -62,6 +62,18 @@ public:
 		this->revision = revision;
 	}
 
+	void setLampState(const String& lampState) {
+		this->lampState = lampState;
+	}
+
+	void setPrinterState(const String& printerState) {
+		this->printerState = printerState;
+	}
+
+	void setHmsMessage(const String& hmsMessage) {
+		this->hmsMessage = hmsMessage;
+	}
+
 private:
 	CbFunc cbFunc;
 
@@ -77,6 +89,9 @@ private:
 	String failedCount;
 	String hostname;
 	String revision;
+	String lampState;
+	String printerState;
+	String hmsMessage;
 };
 
 

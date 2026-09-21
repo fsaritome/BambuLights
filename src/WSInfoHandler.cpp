@@ -36,6 +36,9 @@ void WSInfoHandler::handle(AsyncWebSocketClient *client, char *data) {
 	root["type"] = "sv.init.info";
 
 	JsonVariant value = root.createNestedObject("value");
+	value["lamp_state"] = lampState;
+	value["printer_state"] = printerState;
+	value["hms_message"] = hmsMessage.length() > 0 ? hmsMessage : String("None");
 	value["esp_free_iram_heap"] = heap_caps_get_free_size(MALLOC_CAP_IRAM_8BIT | MALLOC_CAP_32BIT);
 	value["esp_free_heap"] = ESP.getFreeHeap();
 	value["esp_free_heap_min"] = ESP.getMinFreeHeap();

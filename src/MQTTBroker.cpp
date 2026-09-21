@@ -222,6 +222,41 @@ std::map<int, std::string> MQTTBroker::HMS_SEVERITY_LEVELS = {
     {4, "info"}
 };
 
+// These faults latch until the user intervenes at the printer and have nothing
+// to do with the state of a print, so they must not colour the lights.
+std::set<uint64_t> MQTTBroker::HMS_IGNORED = {
+    0x0500010000030004,     // Not enough space in SD Card.
+    0x0500010000030005      // Error in SD Card.
+};
+
+String MQTTBroker::describeHMS(uint64_t value) {
+    std::map<uint64_t, std::string>::const_iterator it = HMS_ERRORS.find(value);
+    if (it != HMS_ERRORS.end()) {
+        return String(it->second.c_str());
+    }
+
+    // Unknown code: report it in the form the Bambu wiki indexes them under.
+    char buf[32];
+    snprintf(buf, sizeof(buf), "HMS_%04X_%04X_%04X_%04X",
+        (unsigned int)((value >> 48) & 0xFFFF),
+        (unsigned int)((value >> 32) & 0xFFFF),
+        (unsigned int)((value >> 16) & 0xFFFF),
+        (unsigned int)(value & 0xFFFF));
+    return String(buf);
+}
+
+const char* MQTTBroker::getStateName() const {
+    switch (state) {
+        case disconnected:  return "Disconnected";
+        case idle:          return "Idle";
+        case printing:      return "Printing";
+        case no_lights:     return "Lights off";
+        case error:         return "Error";
+        case warning:       return "Warning";
+    }
+    return "Unknown";
+}
+
 MQTTBroker::MQTTBroker() : client(espMqttClientTypes::UseInternalTask::YES) {
 	filter["print"]["stg_cur"] = true;
 	filter["print"]["hms"] = true;
@@ -314,30 +349,53 @@ void MQTTBroker::handleMQTTMessage(JsonDocument &jsonMsg) {
         JsonVariant hms = printValues["hms"];
         if (hms) {
             JsonArray hmsArray = hms.as<JsonArray>();
-            if (hmsArray.size() > 0) {
-                State oldState = state;
-                state = error;
-                for (int i=0; i<hmsArray.size(); i++) {
-                    // Bear in mind that the JSON values are signed integers as strings. So we have to convert
-                    // them as int64_t first then cast them to uint64_t.
-                    uint64_t attr = hmsArray[i]["attr"].as<int64_t>(); 
-                    uint64_t code = hmsArray[i]["code"].as<int64_t>();
-                    int level = code >> 16;
-                    uint64_t value = (attr << 32) | code;
-                    Serial.print("HMS value=");Serial.println(HMS_ERRORS[value].c_str());
-                    if (value == 0x0C0003000003000B) {
-                        state = no_lights;
-                        break;
-                    }
+            State oldState = state;
+            String oldMessage = hmsMessage;
 
-                    if (level >= 3) {
-                        state = warning;
-                    } else {
-                        state = error;
-                    }
+            bool lidarActive = false;
+            int worstLevel = 0;     // 0 == nothing raised, else 1 (fatal)..4 (info)
+            String worstMessage;
+
+            for (int i=0; i<hmsArray.size(); i++) {
+                // Bear in mind that the JSON values are signed integers as strings. So we have to convert
+                // them as int64_t first then cast them to uint64_t.
+                uint64_t attr = hmsArray[i]["attr"].as<int64_t>();
+                uint64_t code = hmsArray[i]["code"].as<int64_t>();
+                uint64_t value = (attr << 32) | code;
+
+                if (value == 0x0C0003000003000B) {
+                    lidarActive = true;
+                    break;
                 }
-                stateChanged = stateChanged || (oldState != state);               
+
+                if (HMS_IGNORED.count(value) > 0) {
+                    continue;
+                }
+
+                // Severity runs from 1 (fatal) to 4 (info), so the lowest number
+                // is the worst. The array has no meaningful order, so keep the
+                // most severe rather than whichever happens to come last.
+                int level = code >> 16;
+                if (worstLevel == 0 || level < worstLevel) {
+                    worstLevel = level;
+                    worstMessage = describeHMS(value);
+                }
             }
+
+            if (lidarActive) {
+                state = no_lights;
+                hmsMessage = "";
+            } else if (worstLevel > 0) {
+                state = (worstLevel >= 3) ? warning : error;
+                hmsMessage = worstMessage;
+                Serial.print("HMS: "); Serial.println(hmsMessage);
+            } else {
+                // Nothing raised, or everything raised is on the ignore list, so
+                // leave the state exactly as stg_cur determined it above.
+                hmsMessage = "";
+            }
+
+            stateChanged = stateChanged || (oldState != state) || (oldMessage != hmsMessage);
         }
 
         if (printValues.containsKey("print_error")) {

@@ -207,6 +207,11 @@ void onHostnameChanged(ConfigItem<T> &item) {
 	ESP.restart();
 }
 
+// Last state handed to the LEDs, so the Info page can report what the lamp is
+// actually showing. Written by the LED task, read by the web socket task; a
+// single aligned enum write is atomic, and this is only a diagnostic readout.
+static BambuLights::State currentLightsState = BambuLights::noWiFi;
+
 void ledTaskFn(void *pArg) {
 	bambuLights->begin();
 	BambuLights::State prevLightsState = BambuLights::noWiFi;
@@ -293,6 +298,7 @@ void ledTaskFn(void *pArg) {
 			}
 		}
 
+		currentLightsState = lightsState;
 		bambuLights->setState(lightsState);
 
 		bambuLights->loop();
@@ -357,6 +363,10 @@ WSHandler* wsHandlers[] {
 void infoCallback() {
 	wsInfoHandler.setSsid(ssid);
 	wsInfoHandler.setRevision(manifest[1]);
+
+	wsInfoHandler.setLampState(BambuLights::stateName(currentLightsState));
+	wsInfoHandler.setPrinterState(mqttBroker.getStateName());
+	wsInfoHandler.setHmsMessage(mqttBroker.getHmsMessage());
 
 	wsInfoHandler.setFSSize(String(LittleFS.totalBytes()));
 	wsInfoHandler.setFSFree(String(LittleFS.totalBytes() - LittleFS.usedBytes()));
