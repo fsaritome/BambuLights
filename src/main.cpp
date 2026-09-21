@@ -546,10 +546,14 @@ void mainHandler(AsyncWebServerRequest *request) {
 }
 
 void configureWebServer() {
-	server.serveStatic("/", LittleFS, "/");
+	// no-cache, not no-store: the browser may keep a copy but must revalidate
+	// with us before using it. Without this, browsers serve a stale page after
+	// a filesystem update and it looks as though the update did not take.
+	server.serveStatic("/", LittleFS, "/").setCacheControl("no-cache");
 	server.on("/", HTTP_GET, mainHandler).setFilter(ON_STA_FILTER);
 	server.on("/assets/favicon-32x32.png", HTTP_GET, sendFavicon);
-	server.serveStatic("/assets", LittleFS, "/assets");
+	// Assets are immutable in practice, so let these be cached properly.
+	server.serveStatic("/assets", LittleFS, "/assets").setCacheControl("max-age=86400");
 	otaUpdater.init(server, "/update", sendUpdateForm, sendUpdatingInfo);
 
 	// attach AsyncWebSocket
