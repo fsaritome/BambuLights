@@ -40,9 +40,9 @@ var pages = {
 		"type":"sv.init.menu",
 		"value": [
 			{"1": { "url" : "mqtt.html", "title" : "Printer" }},
-			{"2": { "url" : "leds.html", "title" : "LEDs" }},
 			{"3": { "url" : "mqtt_ha.html", "title" : "Homeassistant" }},
-			{"4": { "url" : "info.html", "title" : "Info" }}
+			{"4": { "url" : "info.html", "title" : "Info" }},
+			{"5": { "url" : "tower.html", "title" : "Tower" }}
 		]
 	}
 
@@ -83,6 +83,14 @@ var sendMQTTHAValues = function(conn) {
 var sendInfoValues = function(conn) {
 	var json = '{"type":"sv.init.info","value":';
 	json += JSON.stringify(state[4]);
+	json += '}';
+	console.log(json);
+	conn.send(json);
+}
+
+var sendTowerValues = function(conn) {
+	var json = '{"type":"sv.init.tower","value":';
+	json += JSON.stringify(state[5]);
 	json += '}';
 	console.log(json);
 	conn.send(json);
@@ -151,6 +159,10 @@ var state = {
 	// info.html render as a literal "...". Values are representative of a
 	// wroom32 build talking to the printer.
 	"4": {
+		'tier_filament' : "Changing filament",
+		'tier_status' : "Printing",
+		'tier_finished' : "Off",
+		'tier_system' : "Off",
 		'lamp_state' : "Printing",
 		'printer_state' : "Printing",
 		'hms_message' : "None",
@@ -177,6 +189,52 @@ var state = {
 		'sync_failed_cnt' : "0"
 	}
 }
+
+// Tower defaults, mirroring Tower::begin() in the firmware:
+// [pattern, hue, saturation, value, rate]. Patterns: 0 constant, 1 pulse,
+// 2 blink, 3 fade. Hue is 0-255: 0 red, 25 amber, 42 yellow, 85 green,
+// 128 cyan, 170 blue, 192 purple.
+var towerDefaults = {
+	fil_changing:   [1,  25, 255, 255,  20],
+	fil_runout:     [2,   0, 255, 255,  40],
+	fil_jam:        [2,   0, 255, 255,  60],
+	fil_ams_lost:   [2, 192, 255, 255,  30],
+	fil_damp:       [3, 170, 255, 200,  10],
+	st_idle:        [0,   0,   0,  60,  10],
+	st_printing:    [0,  85, 255, 255,  10],
+	st_paused:      [1,  25, 255, 255,  20],
+	fin_ready:      [1,  85, 255, 255,  12],
+	sys_no_wifi:    [2, 170, 255, 255,  30],
+	sys_no_printer: [2, 128, 255, 255,  20],
+	sys_warning:    [1,  42, 255, 255,  20],
+	sys_error:      [2,   0, 255, 255,  60]
+};
+
+state[5] = (function () {
+	var s = {
+		// Strip-wide settings, merged in from the old LEDs page.
+		'light_state': true,
+		'light_mode': 1,
+		'chamber_sync': true,
+		'led_type': 0,
+		'num_leds': 4,
+		'timeout': 5,
+		'seg_status-first_led':   0, 'seg_status-count':   1,
+		'seg_finished-first_led': 1, 'seg_finished-count': 1,
+		'seg_system-first_led':   2, 'seg_system-count':   1,
+		'seg_filament-first_led': 3, 'seg_filament-count': 1
+	};
+	Object.keys(towerDefaults).forEach(function (k) {
+		var d = towerDefaults[k];
+		s[k + '-colors']     = true;
+		s[k + '-pattern']    = d[0];
+		s[k + '-hue']        = d[1];
+		s[k + '-saturation'] = d[2];
+		s[k + '-value']      = d[3];
+		s[k + '-rate']       = d[4];
+	});
+	return s;
+})();
 
 var broadcastUpdate = function(conn, field, value) {
 	var json = '{"type":"sv.update","value":{' + '"' + field + '":' + JSON.stringify(value) + '}}';
@@ -248,6 +306,9 @@ wss.on('connection', function(conn) {
     		break;
     	case 4:
     		sendInfoValues(conn);
+    		break;
+    	case 5:
+    		sendTowerValues(conn);
     		break;
     	case 9:
     		message = message.substring(message.indexOf(':')+1);

@@ -5,6 +5,7 @@
 #include <ConfigItem.h>
 #include <NeoPixelBus.h>
 #include <FastLED.h>
+#include "Tower.h"
 
 class BambuLights {
 public:
@@ -40,6 +41,11 @@ public:
   void setState(State state);
   void setBrightness(byte brightness) { this->brightness = brightness; }
 
+  // Paint the stacked tower: one condition per tier, each rendered into its
+  // own segment of the strip. Replaces setState()/loop() when tower mode is
+  // on. Call every frame; the patterns are time based.
+  void renderTower(const Tower::Condition* conditions);
+
 private:
   bool black = false;
   bool brightWhite = false;
@@ -50,6 +56,14 @@ private:
   NeoGamma<NeoGammaTableMethod> colorGamma;
 
   State currentState;
+
+  // Per tier, so each segment's pattern starts from the moment its own
+  // condition appeared rather than from a shared clock.
+  Tower::Condition lastCondition[Tower::NUM_TIERS];
+  unsigned long conditionStartMs[Tower::NUM_TIERS];
+
+  void paintSegment(Tower::Tier tier, uint8_t hue, uint8_t sat, uint8_t val);
+
   CompositeConfigItem *currentConfig;
   ByteConfigItem *currentPattern;
   IntConfigItem *currentHue;

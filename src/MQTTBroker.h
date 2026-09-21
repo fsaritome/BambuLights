@@ -58,6 +58,15 @@ public:
     const String& getHmsMessage() const { return hmsMessage; }
     void setChamberLight(bool on);
 
+    // Facts for the stacked tower. The single State above collapses warnings,
+    // errors and stages into one value; the tower needs them separately.
+    int  getStage() const           { return stage; }
+    bool hasHmsWarning() const      { return hmsWarning; }
+    bool hasHmsError() const        { return hmsError; }
+    bool hasPrintError() const      { return printErrorActive; }
+    bool isFilamentChanging() const { return filamentChanging; }
+    int  getMaxHumidity() const     { return maxHumidity; }  // 1 dry..5 wet, 0 unknown
+
 private:
     void onConnect(bool sessionPresent);
     void onDisconnect(espMqttClientTypes::DisconnectReason reason);
@@ -78,6 +87,13 @@ private:
     bool doorOpen;
     bool lightOn = true;
     String hmsMessage;
+
+    int  stage = -1;
+    bool hmsWarning = false;
+    bool hmsError = false;
+    bool printErrorActive = false;
+    bool filamentChanging = false;
+    int  maxHumidity = 0;
 
     uint32_t lastReconnect = 0;
 

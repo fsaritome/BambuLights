@@ -142,6 +142,16 @@ It then appears at `http://bambulights.local`:
 
 Give the device a DHCP reservation in your router so its address stops moving.
 
+## Known behaviour: adding config items resets stored settings
+
+`EEPROMConfig` checksums the whole configuration tree, so **adding or removing
+any config item invalidates everything already stored** and each setting falls
+back to its compiled-in default. Expect to re-enter the printer details after
+a firmware update that changes the config structure.
+
+WiFi credentials are unaffected — `AsyncWiFiManager` keeps those in NVS
+separately.
+
 ## Develop the web UI without flashing
 
 `web/server.js` is a mock: it serves the GUI and answers the same WebSocket
@@ -156,34 +166,45 @@ Then open <http://localhost:8080/app.html>. Edit, refresh, no flash cycle.
 Its mock payload must mirror the fields `WSInfoHandler::handle()` actually
 sends, or rows render as a literal `...`.
 
-## States
+## The tower
 
-Seven states are configurable, each with a colour, a pattern (constant or
-pulse) and a pulse rate:
+Four tiers, each an independent segment of the strip answering a different
+question. Several can be lit at once, and a dark tier is itself information.
 
-`noWiFi` · `noPrinterConnected` · `printerConnected` · `printing` · `warning` ·
-`error` · `finished`
-
-The printer's stage (`stg_cur`) drives most of this — all 36 stage IDs are
-mapped in [`src/MQTTBroker.cpp`](src/MQTTBroker.cpp). HMS faults and
-`print_error` override the stage, with severity 1–2 mapping to `error` and 3–4
-to `warning`.
-
-## Planned
-
-A stacked tower where each tier is an independent LED segment answering a
-different question, so several can be lit at once:
-
-| Tier | Shows |
+| Tier | Conditions |
 |---|---|
-| **Filament** | runout, jam, changing, AMS lost, damp |
-| **Status** | idle, printing, paused |
-| **Finished** | latched until collected, clears on door open or timeout |
-| **System** | no WiFi, no printer, HMS faults, print errors |
+| **Filament** | changing · runout · jam · AMS lost · damp |
+| **Status** | idle · printing · paused (never dark) |
+| **Finished** | ready to collect — latched until the door opens or the timeout expires |
+| **System** | no WiFi · no printer · warning · error |
 
-This needs per-segment state rather than the single global state the firmware
-uses today, plus segment assignment and ordering in the web UI, and more
-patterns (blink and fade alongside constant and pulse).
+Tiers are not mutually exclusive. Following the usual andon convention,
+**SYSTEM means "a human is needed"** and lights for anything that has stopped
+the machine, including a filament runout or jam — which light FILAMENT too.
+You read SYSTEM from across the room and the specific tier tells you what to
+bring. Routine events (an AMS change) and advisory ones (damp filament) light
+only their own tier. STATUS never reports faults, so it cannot contradict
+SYSTEM.
+
+Within a tier the most severe live condition wins.
+
+Each condition has its own colour, pattern (**constant · pulse · blink ·
+fade**) and rate, and each tier has a configurable first LED and length, all
+on the Tower page. Defaults are one LED per tier.
+
+The decision logic is in [`src/Tower.cpp`](src/Tower.cpp) and reads a plain
+`Facts` struct, so it can be followed without untangling MQTT. Printer stages
+(`stg_cur`) are mapped in [`src/MQTTBroker.cpp`](src/MQTTBroker.cpp); HMS
+severity 1–2 becomes `error`, 3–4 `warning`.
+
+## Known issue: OTA fails when memory is tight
+
+The tower's configuration allocates ~86 config objects on the heap, leaving
+roughly 71 KB free and a 45 KB largest block. OTA uploads sometimes fail with
+a connection reset while the device stays up, apparently because the upload
+buffer no longer fits alongside the TLS MQTT connection. Flashing over USB
+always works. Reducing the heap cost (static rather than heap-allocated config
+objects) would be the fix.
 
 ## Credits
 

@@ -1,0 +1,449 @@
+		<div data-role="page" id="Tower">
+			<div data-role="header" data-position="fixed">
+				<h1>Tower</h1>
+				<a href="#mainMenu" data-rel="main-menu-panel" class="ui-btn ui-btn-left ui-btn-icon-notext ui-icon-bars ui-corner-all"></a>
+			</div>
+			<div data-role="content">
+				<form action="/set_tower" method="POST" id="tower_form">
+					<div class="dispInlineLabel">
+						<label for="light_state">On/Off</label>
+					</div>
+					<div class="dispInline">
+						<input onchange="elementChange(this)" type="checkbox"
+							data-role="flipswitch" name="led_power" id="light_state"
+							data-on-text="On" data-off-text="Off"
+							data-wrapper-class="custom-label-flipswitch">
+					</div>
+					<div class="clearFloats"></div>
+					<div class="dispInlineLabel">
+						<label for="display_type">Light Mode</label>
+					</div>
+					<div class="dispInline">
+						<fieldset data-role="controlgroup" data-type="horizontal" data-mini="true" id="display_type">
+						<input onchange="elementChange(this);" type="radio" name="light_mode" id="lights_always_on" value="0">
+						<label for="lights_always_on">White</label>
+						<input onchange="elementChange(this);" type="radio" name="light_mode" id="lights_reactive" value="1">
+						<label for="lights_reactive">Tower</label>
+						</fieldset>
+					</div>
+					<div class="clearFloats"></div>
+					<div class="dispInlineLabel">
+						<label for="chamber_sync">Sync Chamber Light</label>
+					</div>
+					<div class="dispInline">
+						<input onchange="elementChange(this)" type="checkbox"
+							data-role="flipswitch" name="chamber_light" id="chamber_sync"
+							data-on-text="On" data-off-text="Off"
+							data-wrapper-class="custom-label-flipswitch">
+					</div>
+					<div class="clearFloats"></div>
+					<div class="dispInlineLabel">
+						<label for="led_type">LED Type</label>
+					</div>
+					<div class="dispInline">
+						<select onchange="elementChange(this)" type="picklist" id="led_type" data-mini="true">
+							<option value="0">GRB</option>
+							<option value="1">RGB</option>
+						</select>
+					</div>
+					<div class="clearFloats"></div>
+					<div class="dispInlineLabel">
+						<label for="num_leds">LED Count</label>
+					</div>
+					<div class="dispInlineLabel">
+						<input onblur="elementBlur(this)" type="number" pattern="[0-9]*" id="num_leds" data-mini="true" />
+					</div>
+					<div class="clearFloats"></div>
+					<div class="dispInlineLabel">
+						<label for="timeout">Finished clears after (min)</label>
+					</div>
+					<div class="dispInlineLabel">
+						<input onblur="elementBlur(this)" type="number" pattern="[0-9]*" id="timeout" data-mini="true" />
+					</div>
+					<div class="clearFloats"><h3>Segments</h3></div>
+					<div class="clearFloats"><p style="font-size:0.8em;margin:0 0 6px 0">First LED, then how many. Tiers may not overlap.</p></div>
+					<div class="clearFloats"></div>
+					<div class="dispInlineLabel">
+						<label for="seg_status-first_led">Status</label>
+					</div>
+					<div class="dispInline">
+						<input onblur="elementBlur(this)" type="number" pattern="[0-9]*" id="seg_status-first_led" data-mini="true" />
+					</div>
+					<div class="dispInline">
+						<input onblur="elementBlur(this)" type="number" pattern="[0-9]*" id="seg_status-count" data-mini="true" />
+					</div>
+					<div class="clearFloats"></div>
+					<div class="dispInlineLabel">
+						<label for="seg_finished-first_led">Finished</label>
+					</div>
+					<div class="dispInline">
+						<input onblur="elementBlur(this)" type="number" pattern="[0-9]*" id="seg_finished-first_led" data-mini="true" />
+					</div>
+					<div class="dispInline">
+						<input onblur="elementBlur(this)" type="number" pattern="[0-9]*" id="seg_finished-count" data-mini="true" />
+					</div>
+					<div class="clearFloats"></div>
+					<div class="dispInlineLabel">
+						<label for="seg_system-first_led">System</label>
+					</div>
+					<div class="dispInline">
+						<input onblur="elementBlur(this)" type="number" pattern="[0-9]*" id="seg_system-first_led" data-mini="true" />
+					</div>
+					<div class="dispInline">
+						<input onblur="elementBlur(this)" type="number" pattern="[0-9]*" id="seg_system-count" data-mini="true" />
+					</div>
+					<div class="clearFloats"></div>
+					<div class="dispInlineLabel">
+						<label for="seg_filament-first_led">Filament</label>
+					</div>
+					<div class="dispInline">
+						<input onblur="elementBlur(this)" type="number" pattern="[0-9]*" id="seg_filament-first_led" data-mini="true" />
+					</div>
+					<div class="dispInline">
+						<input onblur="elementBlur(this)" type="number" pattern="[0-9]*" id="seg_filament-count" data-mini="true" />
+					</div>
+					<div class="clearFloats"><h3>Filament tier</h3></div>
+					<fieldset id="fil_changing-colors" data-collapsed="true" data-role="collapsible" data-iconpos="right" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">
+						<legend>Changing filament</legend>
+						<div class="dispInlineLabel">
+							<label for="fil_changing-pattern">Pattern</label>
+						</div>
+						<div class="dispInline">
+							<select onchange="setVisibility('fil_changing-rate_container', this, ['1','2','3']);elementChange(this)" type="picklist" id="fil_changing-pattern" data-mini="true">
+								<option value="0">Constant</option>
+								<option value="1">Pulse</option>
+								<option value="2">Blink</option>
+								<option value="3">Fade</option>
+							</select>
+						</div>
+						<div id="fil_changing-rate_container" style="display: none;">
+							<div class="clearFloats"></div>
+							<label for="fil_changing-rate">Cycles per Minute</label>
+							<input onchange="elementChange(this)" type="range" name="fil_changing-rate" id="fil_changing-rate" min="1" max="120" value="20">
+						</div>
+						<div class="clearFloats"></div>
+						<div class="dispInlineLabel">
+							<label for="fil_changing">Color</label>
+						</div>
+						<div class="dispInline">
+							<input data-wrapper-class="spectrum" class="color_picker" maxlength="1" type='text' id="fil_changing" />
+						</div>
+					</fieldset>
+					<fieldset id="fil_runout-colors" data-collapsed="true" data-role="collapsible" data-iconpos="right" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">
+						<legend>Filament runout</legend>
+						<div class="dispInlineLabel">
+							<label for="fil_runout-pattern">Pattern</label>
+						</div>
+						<div class="dispInline">
+							<select onchange="setVisibility('fil_runout-rate_container', this, ['1','2','3']);elementChange(this)" type="picklist" id="fil_runout-pattern" data-mini="true">
+								<option value="0">Constant</option>
+								<option value="1">Pulse</option>
+								<option value="2">Blink</option>
+								<option value="3">Fade</option>
+							</select>
+						</div>
+						<div id="fil_runout-rate_container" style="display: none;">
+							<div class="clearFloats"></div>
+							<label for="fil_runout-rate">Cycles per Minute</label>
+							<input onchange="elementChange(this)" type="range" name="fil_runout-rate" id="fil_runout-rate" min="1" max="120" value="20">
+						</div>
+						<div class="clearFloats"></div>
+						<div class="dispInlineLabel">
+							<label for="fil_runout">Color</label>
+						</div>
+						<div class="dispInline">
+							<input data-wrapper-class="spectrum" class="color_picker" maxlength="1" type='text' id="fil_runout" />
+						</div>
+					</fieldset>
+					<fieldset id="fil_jam-colors" data-collapsed="true" data-role="collapsible" data-iconpos="right" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">
+						<legend>Filament jam</legend>
+						<div class="dispInlineLabel">
+							<label for="fil_jam-pattern">Pattern</label>
+						</div>
+						<div class="dispInline">
+							<select onchange="setVisibility('fil_jam-rate_container', this, ['1','2','3']);elementChange(this)" type="picklist" id="fil_jam-pattern" data-mini="true">
+								<option value="0">Constant</option>
+								<option value="1">Pulse</option>
+								<option value="2">Blink</option>
+								<option value="3">Fade</option>
+							</select>
+						</div>
+						<div id="fil_jam-rate_container" style="display: none;">
+							<div class="clearFloats"></div>
+							<label for="fil_jam-rate">Cycles per Minute</label>
+							<input onchange="elementChange(this)" type="range" name="fil_jam-rate" id="fil_jam-rate" min="1" max="120" value="20">
+						</div>
+						<div class="clearFloats"></div>
+						<div class="dispInlineLabel">
+							<label for="fil_jam">Color</label>
+						</div>
+						<div class="dispInline">
+							<input data-wrapper-class="spectrum" class="color_picker" maxlength="1" type='text' id="fil_jam" />
+						</div>
+					</fieldset>
+					<fieldset id="fil_ams_lost-colors" data-collapsed="true" data-role="collapsible" data-iconpos="right" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">
+						<legend>AMS lost</legend>
+						<div class="dispInlineLabel">
+							<label for="fil_ams_lost-pattern">Pattern</label>
+						</div>
+						<div class="dispInline">
+							<select onchange="setVisibility('fil_ams_lost-rate_container', this, ['1','2','3']);elementChange(this)" type="picklist" id="fil_ams_lost-pattern" data-mini="true">
+								<option value="0">Constant</option>
+								<option value="1">Pulse</option>
+								<option value="2">Blink</option>
+								<option value="3">Fade</option>
+							</select>
+						</div>
+						<div id="fil_ams_lost-rate_container" style="display: none;">
+							<div class="clearFloats"></div>
+							<label for="fil_ams_lost-rate">Cycles per Minute</label>
+							<input onchange="elementChange(this)" type="range" name="fil_ams_lost-rate" id="fil_ams_lost-rate" min="1" max="120" value="20">
+						</div>
+						<div class="clearFloats"></div>
+						<div class="dispInlineLabel">
+							<label for="fil_ams_lost">Color</label>
+						</div>
+						<div class="dispInline">
+							<input data-wrapper-class="spectrum" class="color_picker" maxlength="1" type='text' id="fil_ams_lost" />
+						</div>
+					</fieldset>
+					<fieldset id="fil_damp-colors" data-collapsed="true" data-role="collapsible" data-iconpos="right" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">
+						<legend>Filament damp</legend>
+						<div class="dispInlineLabel">
+							<label for="fil_damp-pattern">Pattern</label>
+						</div>
+						<div class="dispInline">
+							<select onchange="setVisibility('fil_damp-rate_container', this, ['1','2','3']);elementChange(this)" type="picklist" id="fil_damp-pattern" data-mini="true">
+								<option value="0">Constant</option>
+								<option value="1">Pulse</option>
+								<option value="2">Blink</option>
+								<option value="3">Fade</option>
+							</select>
+						</div>
+						<div id="fil_damp-rate_container" style="display: none;">
+							<div class="clearFloats"></div>
+							<label for="fil_damp-rate">Cycles per Minute</label>
+							<input onchange="elementChange(this)" type="range" name="fil_damp-rate" id="fil_damp-rate" min="1" max="120" value="20">
+						</div>
+						<div class="clearFloats"></div>
+						<div class="dispInlineLabel">
+							<label for="fil_damp">Color</label>
+						</div>
+						<div class="dispInline">
+							<input data-wrapper-class="spectrum" class="color_picker" maxlength="1" type='text' id="fil_damp" />
+						</div>
+					</fieldset>
+					<div class="clearFloats"><h3>Status tier</h3></div>
+					<fieldset id="st_idle-colors" data-collapsed="true" data-role="collapsible" data-iconpos="right" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">
+						<legend>Idle</legend>
+						<div class="dispInlineLabel">
+							<label for="st_idle-pattern">Pattern</label>
+						</div>
+						<div class="dispInline">
+							<select onchange="setVisibility('st_idle-rate_container', this, ['1','2','3']);elementChange(this)" type="picklist" id="st_idle-pattern" data-mini="true">
+								<option value="0">Constant</option>
+								<option value="1">Pulse</option>
+								<option value="2">Blink</option>
+								<option value="3">Fade</option>
+							</select>
+						</div>
+						<div id="st_idle-rate_container" style="display: none;">
+							<div class="clearFloats"></div>
+							<label for="st_idle-rate">Cycles per Minute</label>
+							<input onchange="elementChange(this)" type="range" name="st_idle-rate" id="st_idle-rate" min="1" max="120" value="20">
+						</div>
+						<div class="clearFloats"></div>
+						<div class="dispInlineLabel">
+							<label for="st_idle">Color</label>
+						</div>
+						<div class="dispInline">
+							<input data-wrapper-class="spectrum" class="color_picker" maxlength="1" type='text' id="st_idle" />
+						</div>
+					</fieldset>
+					<fieldset id="st_printing-colors" data-collapsed="true" data-role="collapsible" data-iconpos="right" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">
+						<legend>Printing</legend>
+						<div class="dispInlineLabel">
+							<label for="st_printing-pattern">Pattern</label>
+						</div>
+						<div class="dispInline">
+							<select onchange="setVisibility('st_printing-rate_container', this, ['1','2','3']);elementChange(this)" type="picklist" id="st_printing-pattern" data-mini="true">
+								<option value="0">Constant</option>
+								<option value="1">Pulse</option>
+								<option value="2">Blink</option>
+								<option value="3">Fade</option>
+							</select>
+						</div>
+						<div id="st_printing-rate_container" style="display: none;">
+							<div class="clearFloats"></div>
+							<label for="st_printing-rate">Cycles per Minute</label>
+							<input onchange="elementChange(this)" type="range" name="st_printing-rate" id="st_printing-rate" min="1" max="120" value="20">
+						</div>
+						<div class="clearFloats"></div>
+						<div class="dispInlineLabel">
+							<label for="st_printing">Color</label>
+						</div>
+						<div class="dispInline">
+							<input data-wrapper-class="spectrum" class="color_picker" maxlength="1" type='text' id="st_printing" />
+						</div>
+					</fieldset>
+					<fieldset id="st_paused-colors" data-collapsed="true" data-role="collapsible" data-iconpos="right" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">
+						<legend>Paused</legend>
+						<div class="dispInlineLabel">
+							<label for="st_paused-pattern">Pattern</label>
+						</div>
+						<div class="dispInline">
+							<select onchange="setVisibility('st_paused-rate_container', this, ['1','2','3']);elementChange(this)" type="picklist" id="st_paused-pattern" data-mini="true">
+								<option value="0">Constant</option>
+								<option value="1">Pulse</option>
+								<option value="2">Blink</option>
+								<option value="3">Fade</option>
+							</select>
+						</div>
+						<div id="st_paused-rate_container" style="display: none;">
+							<div class="clearFloats"></div>
+							<label for="st_paused-rate">Cycles per Minute</label>
+							<input onchange="elementChange(this)" type="range" name="st_paused-rate" id="st_paused-rate" min="1" max="120" value="20">
+						</div>
+						<div class="clearFloats"></div>
+						<div class="dispInlineLabel">
+							<label for="st_paused">Color</label>
+						</div>
+						<div class="dispInline">
+							<input data-wrapper-class="spectrum" class="color_picker" maxlength="1" type='text' id="st_paused" />
+						</div>
+					</fieldset>
+					<div class="clearFloats"><h3>Finished tier</h3></div>
+					<fieldset id="fin_ready-colors" data-collapsed="true" data-role="collapsible" data-iconpos="right" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">
+						<legend>Ready to collect</legend>
+						<div class="dispInlineLabel">
+							<label for="fin_ready-pattern">Pattern</label>
+						</div>
+						<div class="dispInline">
+							<select onchange="setVisibility('fin_ready-rate_container', this, ['1','2','3']);elementChange(this)" type="picklist" id="fin_ready-pattern" data-mini="true">
+								<option value="0">Constant</option>
+								<option value="1">Pulse</option>
+								<option value="2">Blink</option>
+								<option value="3">Fade</option>
+							</select>
+						</div>
+						<div id="fin_ready-rate_container" style="display: none;">
+							<div class="clearFloats"></div>
+							<label for="fin_ready-rate">Cycles per Minute</label>
+							<input onchange="elementChange(this)" type="range" name="fin_ready-rate" id="fin_ready-rate" min="1" max="120" value="20">
+						</div>
+						<div class="clearFloats"></div>
+						<div class="dispInlineLabel">
+							<label for="fin_ready">Color</label>
+						</div>
+						<div class="dispInline">
+							<input data-wrapper-class="spectrum" class="color_picker" maxlength="1" type='text' id="fin_ready" />
+						</div>
+					</fieldset>
+					<div class="clearFloats"><h3>System tier</h3></div>
+					<fieldset id="sys_no_wifi-colors" data-collapsed="true" data-role="collapsible" data-iconpos="right" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">
+						<legend>No WiFi</legend>
+						<div class="dispInlineLabel">
+							<label for="sys_no_wifi-pattern">Pattern</label>
+						</div>
+						<div class="dispInline">
+							<select onchange="setVisibility('sys_no_wifi-rate_container', this, ['1','2','3']);elementChange(this)" type="picklist" id="sys_no_wifi-pattern" data-mini="true">
+								<option value="0">Constant</option>
+								<option value="1">Pulse</option>
+								<option value="2">Blink</option>
+								<option value="3">Fade</option>
+							</select>
+						</div>
+						<div id="sys_no_wifi-rate_container" style="display: none;">
+							<div class="clearFloats"></div>
+							<label for="sys_no_wifi-rate">Cycles per Minute</label>
+							<input onchange="elementChange(this)" type="range" name="sys_no_wifi-rate" id="sys_no_wifi-rate" min="1" max="120" value="20">
+						</div>
+						<div class="clearFloats"></div>
+						<div class="dispInlineLabel">
+							<label for="sys_no_wifi">Color</label>
+						</div>
+						<div class="dispInline">
+							<input data-wrapper-class="spectrum" class="color_picker" maxlength="1" type='text' id="sys_no_wifi" />
+						</div>
+					</fieldset>
+					<fieldset id="sys_no_printer-colors" data-collapsed="true" data-role="collapsible" data-iconpos="right" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">
+						<legend>No printer</legend>
+						<div class="dispInlineLabel">
+							<label for="sys_no_printer-pattern">Pattern</label>
+						</div>
+						<div class="dispInline">
+							<select onchange="setVisibility('sys_no_printer-rate_container', this, ['1','2','3']);elementChange(this)" type="picklist" id="sys_no_printer-pattern" data-mini="true">
+								<option value="0">Constant</option>
+								<option value="1">Pulse</option>
+								<option value="2">Blink</option>
+								<option value="3">Fade</option>
+							</select>
+						</div>
+						<div id="sys_no_printer-rate_container" style="display: none;">
+							<div class="clearFloats"></div>
+							<label for="sys_no_printer-rate">Cycles per Minute</label>
+							<input onchange="elementChange(this)" type="range" name="sys_no_printer-rate" id="sys_no_printer-rate" min="1" max="120" value="20">
+						</div>
+						<div class="clearFloats"></div>
+						<div class="dispInlineLabel">
+							<label for="sys_no_printer">Color</label>
+						</div>
+						<div class="dispInline">
+							<input data-wrapper-class="spectrum" class="color_picker" maxlength="1" type='text' id="sys_no_printer" />
+						</div>
+					</fieldset>
+					<fieldset id="sys_warning-colors" data-collapsed="true" data-role="collapsible" data-iconpos="right" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">
+						<legend>Warning</legend>
+						<div class="dispInlineLabel">
+							<label for="sys_warning-pattern">Pattern</label>
+						</div>
+						<div class="dispInline">
+							<select onchange="setVisibility('sys_warning-rate_container', this, ['1','2','3']);elementChange(this)" type="picklist" id="sys_warning-pattern" data-mini="true">
+								<option value="0">Constant</option>
+								<option value="1">Pulse</option>
+								<option value="2">Blink</option>
+								<option value="3">Fade</option>
+							</select>
+						</div>
+						<div id="sys_warning-rate_container" style="display: none;">
+							<div class="clearFloats"></div>
+							<label for="sys_warning-rate">Cycles per Minute</label>
+							<input onchange="elementChange(this)" type="range" name="sys_warning-rate" id="sys_warning-rate" min="1" max="120" value="20">
+						</div>
+						<div class="clearFloats"></div>
+						<div class="dispInlineLabel">
+							<label for="sys_warning">Color</label>
+						</div>
+						<div class="dispInline">
+							<input data-wrapper-class="spectrum" class="color_picker" maxlength="1" type='text' id="sys_warning" />
+						</div>
+					</fieldset>
+					<fieldset id="sys_error-colors" data-collapsed="true" data-role="collapsible" data-iconpos="right" data-collapsed-icon="carat-d" data-expanded-icon="carat-u">
+						<legend>Error</legend>
+						<div class="dispInlineLabel">
+							<label for="sys_error-pattern">Pattern</label>
+						</div>
+						<div class="dispInline">
+							<select onchange="setVisibility('sys_error-rate_container', this, ['1','2','3']);elementChange(this)" type="picklist" id="sys_error-pattern" data-mini="true">
+								<option value="0">Constant</option>
+								<option value="1">Pulse</option>
+								<option value="2">Blink</option>
+								<option value="3">Fade</option>
+							</select>
+						</div>
+						<div id="sys_error-rate_container" style="display: none;">
+							<div class="clearFloats"></div>
+							<label for="sys_error-rate">Cycles per Minute</label>
+							<input onchange="elementChange(this)" type="range" name="sys_error-rate" id="sys_error-rate" min="1" max="120" value="20">
+						</div>
+						<div class="clearFloats"></div>
+						<div class="dispInlineLabel">
+							<label for="sys_error">Color</label>
+						</div>
+						<div class="dispInline">
+							<input data-wrapper-class="spectrum" class="color_picker" maxlength="1" type='text' id="sys_error" />
+						</div>
+					</fieldset>
+				</form>
+			</div>
+		</div>

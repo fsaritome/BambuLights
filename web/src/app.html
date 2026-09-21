@@ -3,7 +3,7 @@
 
 <head>
 	<meta charset="utf-8" />
-	<title>EleksTube IPS</title>
+	<title>Bambu Light Tower</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="apple-mobile-web-app-capable" content="yes" />
 	<!-- build:js script.js -->
@@ -454,6 +454,7 @@
 				switch (msg.type) {
 					case "sv.update":
 					case "sv.init.leds":	// Received initialization object
+					case "sv.init.tower":	// Received initialization object
 					case "sv.init.mqtt":	// Received initialization object
 					case "sv.init.mqtt_ha":	// Received initialization object
 					case "sv.init.info":	// Received initialization object

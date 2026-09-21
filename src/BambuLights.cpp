@@ -209,6 +209,11 @@ BambuLights::BambuLights(int pin) :
     currentState(noWiFi)
 {
     setCurrentConfig(getNoWiFiConfig());
+
+    for (int t = 0; t < Tower::NUM_TIERS; t++) {
+        lastCondition[t] = Tower::COND_OFF;
+        conditionStartMs[t] = 0;
+    }
 }
 
 void BambuLights::updatePixelCount() {
@@ -419,6 +424,64 @@ void BambuLights::fill(uint8_t hue, uint8_t sat, uint8_t val) {
 
 void BambuLights::clear() {
   fill(0, 0, 0);
+}
+
+// ------------------------------------------------------------- tower mode
+
+void BambuLights::paintSegment(Tower::Tier tier, uint8_t hue, uint8_t sat, uint8_t val) {
+  Tower::Segment& seg = Tower::segment(tier);
+  const uint16_t total = pixels->PixelCount();
+
+  for (uint8_t i = 0; i < seg.count.value; i++) {
+    const uint16_t idx = (uint16_t)seg.first_led.value + i;
+    if (idx < total) {           // ignore segments configured past the strip
+      setPixelColor(idx, hue, sat, val);
+    }
+  }
+}
+
+void BambuLights::renderTower(const Tower::Condition* conditions) {
+  const unsigned long now = millis();
+
+  // Master off, and the "just be a white lamp" mode, both bypass the tiers.
+  if (!getLightState()) {
+    pixels->ClearTo(RgbColor(0));
+    show();
+    return;
+  }
+  if (getLightMode() == 0) {
+    for (uint16_t i = 0; i < pixels->PixelCount(); i++) {
+      setPixelColor(i, 0, 0, 255 * brightness / 255);
+    }
+    show();
+    return;
+  }
+
+  // Segments do not have to cover the whole strip, so start from dark rather
+  // than leaving stale pixels lit where a segment was moved or shrunk.
+  pixels->ClearTo(RgbColor(0));
+
+  for (int t = 0; t < Tower::NUM_TIERS; t++) {
+    const Tower::Condition cond = conditions[t];
+
+    if (cond != lastCondition[t]) {
+      lastCondition[t] = cond;
+      conditionStartMs[t] = now;   // restart this tier's pattern cleanly
+    }
+
+    if (cond == Tower::COND_OFF) {
+      continue;                    // a dark tier is meaningful, leave it dark
+    }
+
+    Tower::Look& lk = Tower::look(cond);
+    byte val = Tower::patternBrightness(lk.pattern.value, lk.value.value,
+                                        lk.rate.value, now, conditionStartMs[t]);
+    val = (byte)((uint16_t)val * brightness / 255);
+
+    paintSegment((Tower::Tier)t, (uint8_t)lk.hue.value, lk.saturation.value, val);
+  }
+
+  show();
 }
 
 void BambuLights::show() {

@@ -11,10 +11,10 @@ public:
 	virtual void handle(AsyncWebSocketClient *client, char *data);
 	void setItems(String **items);
 
-	static String ledsMenu;
 	static String mqttMenu;
 	static String mqttHAMenu;
 	static String infoMenu;
+	static String towerMenu;
 
 private:
 	String **items;
