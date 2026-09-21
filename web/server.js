@@ -91,7 +91,7 @@ var sendInfoValues = function(conn) {
 var state = {
 	"1": {
 		'mqtt_host' : "192.168.10.10",
-		'mqtt_port' : 1883,
+		'mqtt_port' : 8883,
 		'mqtt_user' : "bblp",
 		'mqtt_password' : "secret",
 		'mqtt_serialnumber' : "abcdefg"
@@ -147,16 +147,34 @@ var state = {
 		'mqtt_ha_user' : "mosquitto",
 		'mqtt_ha_password' : "secret2",
 	},
+	// Must mirror the fields WSInfoHandler::handle() actually sends, or rows in
+	// info.html render as a literal "...". Values are representative of a
+	// wroom32 build talking to the printer.
 	"4": {
-		'esp_boot_version' : "1234",
-		'esp_free_heap' : "5678",
-		'esp_sketch_size' : "90123",
-		'esp_sketch_space' : "4567",
-		'esp_flash_size' : "8901",
-		'esp_chip_id' : "chip id",
-		'wifi_ip_address' : "192.168.1.1",
-		'wifi_mac_address' : "0E:12:34:56:78",
-		'wifi_ssid' : "STC-Wonderful"
+		'lamp_state' : "Printing",
+		'printer_state' : "Printing",
+		'hms_message' : "None",
+		'software_revision' : "wroom32-dev",
+		'wifi_ip_address' : "192.168.1.50",
+		'wifi_mac_address' : "A0:B7:65:11:22:33",
+		'wifi_ssid' : "your-wifi",
+		'wifi_ap_ssid' : "5FC874bambulights",
+		'hostname' : "bambulights",
+		'esp_chip_id' : "3",
+		'esp_free_heap' : "233192",
+		'esp_free_iram_heap' : "57344",
+		'esp_free_heap_min' : "221004",
+		'esp_max_alloc_heap' : "110592",
+		'esp_sketch_size' : "1589717",
+		'esp_sketch_space' : "179755",
+		'fs_size' : "589824",
+		'fs_free' : "294912",
+		'brightness' : "255",
+		'triggered' : "false",
+		'clock_on' : "true",
+		'sync_time' : "",
+		'sync_failed_msg' : "",
+		'sync_failed_cnt' : "0"
 	}
 }
 

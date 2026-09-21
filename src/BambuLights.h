@@ -15,6 +15,9 @@ public:
 
   const static String patterns_str[num_patterns];
 
+  // Human readable name for the Info page.
+  static const char* stateName(State state);
+
   static CompositeConfigItem& getAllConfig();
   static CompositeConfigItem& getNoWiFiConfig();
   static CompositeConfigItem& getNoPrinterConnectedConfig();

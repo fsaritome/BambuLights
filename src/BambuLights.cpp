@@ -4,6 +4,21 @@
 //#define DEBUG_COLORS
 //#define DEBUG_FADE
 
+const char* BambuLights::stateName(State state) {
+    switch (state) {
+        case noWiFi:     return "No WiFi";
+        case noPrinter:  return "No printer";
+        case printer:    return "Idle";
+        case printing:   return "Printing";
+        case no_lights:  return "Off";
+        case white:      return "White";
+        case error:      return "Error";
+        case warning:    return "Warning";
+        case finished:   return "Finished";
+    }
+    return "Unknown";
+}
+
 CompositeConfigItem& BambuLights::getNoWiFiConfig() {
     static BooleanConfigItem colors("colors", true);  // Collapsed
     static ByteConfigItem pattern("pattern", pulse);
