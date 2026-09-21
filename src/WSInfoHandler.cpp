@@ -52,6 +52,10 @@ void WSInfoHandler::handle(AsyncWebSocketClient *client, char *data) {
 
 	value["esp_chip_id"] = String(ESP.getChipRevision(), HEX);
 
+	// This board's own signal, not the printer's. Weak signal here is a
+	// common cause of the printer connection dropping, since a WiFi drop
+	// takes the MQTT connection with it.
+	value["wifi_rssi"] = String(WiFi.RSSI()) + " dBm";
 	value["wifi_ip_address"] = WiFi.localIP().toString();
 	value["wifi_mac_address"] = WiFi.macAddress();
 	value["wifi_ssid"] = WiFi.SSID();

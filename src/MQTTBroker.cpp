@@ -263,9 +263,13 @@ MQTTBroker::MQTTBroker() : client(espMqttClientTypes::UseInternalTask::YES) {
     filter["print"]["print_error"] = true;
 	filter["print"]["home_flag"] = true;
 	filter["print"]["lights_report"] = true;
-	// For the tower's filament tier: tray_now/tray_tar reveal an AMS change
-	// in progress, and each unit reports a humidity level.
-	filter["print"]["ams"] = true;
+	// For the tower's filament tier. Filter down to the three values actually
+	// used rather than the whole ams object: with two AMS units that is eight
+	// trays of twenty-odd fields, and parsing it on every message fragmented
+	// the heap badly enough that the TLS handshake could no longer allocate.
+	filter["print"]["ams"]["tray_now"] = true;
+	filter["print"]["ams"]["tray_tar"] = true;
+	filter["print"]["ams"]["ams"][0]["humidity"] = true;
 }
 
 void MQTTBroker::setStateChangedCallback(std::function<void(MQTTBroker*)> callback) {

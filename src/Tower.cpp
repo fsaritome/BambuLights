@@ -64,30 +64,53 @@ void begin() {
         return;
     }
 
-    looks[COND_FIL_CHANGING]  = new Look("fil_changing",   PAT_PULSE,     25, 255, 255,  20);
-    looks[COND_FIL_RUNOUT]    = new Look("fil_runout",     PAT_BLINK,      0, 255, 255,  40);
-    looks[COND_FIL_JAM]       = new Look("fil_jam",        PAT_BLINK,      0, 255, 255,  60);
-    looks[COND_FIL_AMS_LOST]  = new Look("fil_ams_lost",   PAT_BLINK,    192, 255, 255,  30);
-    looks[COND_FIL_DAMP]      = new Look("fil_damp",       PAT_FADE,     170, 255, 200,  10);
+    // Static rather than heap allocated on purpose. These live for the whole
+    // run, and putting ~90 small objects on the heap fragmented it enough
+    // that mbedTLS could no longer find a contiguous block for the printer
+    // connection ("SSL - Memory allocation failed").
+    static Look lkFilChanging ("fil_changing",   PAT_PULSE,     25, 255, 255,  20);
+    static Look lkFilRunout   ("fil_runout",     PAT_BLINK,      0, 255, 255,  40);
+    static Look lkFilJam      ("fil_jam",        PAT_BLINK,      0, 255, 255,  60);
+    static Look lkFilAmsLost  ("fil_ams_lost",   PAT_BLINK,    192, 255, 255,  30);
+    static Look lkFilDamp     ("fil_damp",       PAT_FADE,     170, 255, 200,  10);
 
-    looks[COND_ST_IDLE]       = new Look("st_idle",        PAT_CONSTANT,   0,   0,  60,  10);
-    looks[COND_ST_PRINTING]   = new Look("st_printing",    PAT_CONSTANT,  85, 255, 255,  10);
-    looks[COND_ST_PAUSED]     = new Look("st_paused",      PAT_PULSE,     25, 255, 255,  20);
+    static Look lkStIdle      ("st_idle",        PAT_CONSTANT,   0,   0,  60,  10);
+    static Look lkStPrinting  ("st_printing",    PAT_CONSTANT,  85, 255, 255,  10);
+    static Look lkStPaused    ("st_paused",      PAT_PULSE,     25, 255, 255,  20);
 
-    looks[COND_FIN_READY]     = new Look("fin_ready",      PAT_PULSE,     85, 255, 255,  12);
+    static Look lkFinReady    ("fin_ready",      PAT_PULSE,     85, 255, 255,  12);
 
-    looks[COND_SYS_NO_WIFI]   = new Look("sys_no_wifi",    PAT_BLINK,    170, 255, 255,  30);
-    looks[COND_SYS_NO_PRINTER]= new Look("sys_no_printer", PAT_BLINK,    128, 255, 255,  20);
-    looks[COND_SYS_WARNING]   = new Look("sys_warning",    PAT_PULSE,     42, 255, 255,  20);
-    looks[COND_SYS_ERROR]     = new Look("sys_error",      PAT_BLINK,      0, 255, 255,  60);
+    static Look lkSysNoWifi   ("sys_no_wifi",    PAT_BLINK,    170, 255, 255,  30);
+    static Look lkSysNoPrinter("sys_no_printer", PAT_BLINK,    128, 255, 255,  20);
+    static Look lkSysWarning  ("sys_warning",    PAT_PULSE,     42, 255, 255,  20);
+    static Look lkSysError    ("sys_error",      PAT_BLINK,      0, 255, 255,  60);
 
     // One LED per tier by default. Filament sits last in the chain; whether
     // that is the physical bottom depends on which end your data line enters,
     // and every position is editable on the Tower page anyway.
-    segments[TIER_STATUS]   = new Segment("seg_status",   0, 1);
-    segments[TIER_FINISHED] = new Segment("seg_finished", 1, 1);
-    segments[TIER_SYSTEM]   = new Segment("seg_system",   2, 1);
-    segments[TIER_FILAMENT] = new Segment("seg_filament", 3, 1);
+    static Segment segStatus  ("seg_status",   0, 1);
+    static Segment segFinished("seg_finished", 1, 1);
+    static Segment segSystem  ("seg_system",   2, 1);
+    static Segment segFilament("seg_filament", 3, 1);
+
+    looks[COND_FIL_CHANGING]   = &lkFilChanging;
+    looks[COND_FIL_RUNOUT]     = &lkFilRunout;
+    looks[COND_FIL_JAM]        = &lkFilJam;
+    looks[COND_FIL_AMS_LOST]   = &lkFilAmsLost;
+    looks[COND_FIL_DAMP]       = &lkFilDamp;
+    looks[COND_ST_IDLE]        = &lkStIdle;
+    looks[COND_ST_PRINTING]    = &lkStPrinting;
+    looks[COND_ST_PAUSED]      = &lkStPaused;
+    looks[COND_FIN_READY]      = &lkFinReady;
+    looks[COND_SYS_NO_WIFI]    = &lkSysNoWifi;
+    looks[COND_SYS_NO_PRINTER] = &lkSysNoPrinter;
+    looks[COND_SYS_WARNING]    = &lkSysWarning;
+    looks[COND_SYS_ERROR]      = &lkSysError;
+
+    segments[TIER_STATUS]   = &segStatus;
+    segments[TIER_FINISHED] = &segFinished;
+    segments[TIER_SYSTEM]   = &segSystem;
+    segments[TIER_FILAMENT] = &segFilament;
 
     int n = 0;
 
@@ -108,7 +131,9 @@ void begin() {
     }
     towerSet[n] = 0;
 
-    towerConfig = new CompositeConfigItem("tower", 0, towerSet);
+    // Declared last so towerSet is fully populated first.
+    static CompositeConfigItem cfg("tower", 0, towerSet);
+    towerConfig = &cfg;
 }
 
 CompositeConfigItem& getConfig() {

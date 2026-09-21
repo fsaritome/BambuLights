@@ -167,6 +167,7 @@ var state = {
 		'printer_state' : "Printing",
 		'hms_message' : "None",
 		'software_revision' : "wroom32-dev",
+		'wifi_rssi' : "-58 dBm",
 		'wifi_ip_address' : "192.168.1.50",
 		'wifi_mac_address' : "A0:B7:65:11:22:33",
 		'wifi_ssid' : "your-wifi",
